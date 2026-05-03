@@ -5,7 +5,8 @@ require('dotenv').config();
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger.js');
 const User = require('./models/User');
-const userRoutes = require('./routes/userRoutes')
+const userRoutes = require('./routes/userRoutes');
+const errorHandler = require('./middleware/errorMiddleware');
 
 const app = express();
 
@@ -20,6 +21,7 @@ mongoose.connect(process.env.MONGO_URI)
     .catch(err => console.error("❌ Błąd połączenia z bazą:", err));
 
 app.use('/api/', userRoutes);
+app.use(errorHandler);
 
 // Uruchomienie serwera
 const PORT = process.env.PORT || 5000;
