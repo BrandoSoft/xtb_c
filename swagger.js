@@ -14,8 +14,18 @@ const options = {
                 description: 'Serwer lokalny',
             },
         ],
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT',
+                },
+            },
+        },
+        security: [{ bearerAuth: [] }],
     },
-    apis: ['./index.js', './routes/*.js'], // Tutaj Swagger będzie szukał opisów ścieżek
+    apis: ['./index.js', './routes/*.js'],
 };
 
 const specs = swaggerJsdoc(options);

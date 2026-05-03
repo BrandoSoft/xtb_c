@@ -2,7 +2,15 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const asyncHandler = require('express-async-handler');
+const jwt = require('jsonwebtoken');
+const { protect } = require('../middleware/authMiddleware');
 
+// Funkcja pomocnicza do tworzenia tokena
+const generateToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: '30d', // Token ważny przez 30 dni
+    });
+};
 
 // GET
 
@@ -41,7 +49,23 @@ router.get('/users/', async (req, res) => {
         res.status(500).json({ message: "Błąd serwera" });
     }
 });
-// GET - Jeden użytkownik
+
+/**
+ * @openapi
+ * /api/users/profile:
+ *   get:
+ *     summary: Pobiera profil zalogowanego użytkownika (Wymaga Tokena)
+ *     responses:
+ *       200:
+ *         description: Zwraca dane zalogowanego usera
+ *       401:
+ *         description: Brak tokena
+ */
+router.get('/users/profile', protect, asyncHandler(async (req, res) => {
+    // Dzięki middleware 'protect', mamy dostęp do req.user!
+    res.json(req.user);
+}));
+
 /**
  * @openapi
  * /api/users/{id}:
@@ -71,7 +95,10 @@ router.get('/users/:id', asyncHandler(async (req, res) => {
     res.json(user);
 }));
 
-// POST - Rejestracja
+
+
+// POST
+
 /**
  * @openapi
  * /api/users:
@@ -99,12 +126,68 @@ router.get('/users/:id', asyncHandler(async (req, res) => {
  *         description: Błąd zapytania
  */
 router.post('/users', asyncHandler(async (req, res) => {
-    const newUser = new User(req.body);
 
-    // Jeśli Mongoose wyrzuci błąd walidacji, asyncHandler sam przekaże go jako status 400/500
-    await newUser.save();
-    res.status(201).json(newUser);
+    const { username, email, password, balance } = req.body;
+
+    // 1. Tworzymy nową instancję modelu (tu jeszcze hasło jest jawne)
+    const user = new User({
+        username,
+        email,
+        password, // To hasło zostanie zahashowane w modelu User.js przez pre('save')
+        balance
+    });
+
+    // 2. Wywołujemy .save() - to odpala mechanizm szyfrowania z modelu
+    await user.save();
+    // Konwertujemy dokument Mongoose na zwykły obiekt JS i usuwamy hasło
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    res.status(201).json(userResponse);
 }));
+
+/**
+ * @openapi
+ * /api/users/login:
+ *   post:
+ *     summary: Logowanie użytkownika i pobranie tokena
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Zalogowano pomyślnie, zwraca token
+ *       401:
+ *         description: Nieprawidłowy email lub hasło
+ */
+router.post('/users/login', asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
+
+    // 1. Szukamy użytkownika po emailu
+    const user = await User.findOne({ email });
+
+    // 2. Sprawdzamy czy użytkownik istnieje i czy hasło pasuje (używając metody matchPassword z modelu)
+    if (user && (await user.matchPassword(password))) {
+        res.json({
+            _id: user._id,
+            username: user.username,
+            email: user.email,
+            token: generateToken(user._id), // Wysyłamy wygenerowany token
+        });
+    } else {
+        res.status(401);
+        throw new Error('Nieprawidłowy email lub hasło');
+    }
+}));
+
 
 // PUT - Aktualizacja
 /**
