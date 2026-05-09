@@ -36,3 +36,20 @@
     *   Implementacja mechanizmu usuwania hasła (`delete userResponse.password`) z odpowiedzi serwera (Response Body) dla wszystkich endpointów użytkownika.
 
 ---
+
+---
+
+### AM (Adrian Michałowski)
+* **Integracja zewnętrznych API finansowych**:
+    * **Narodowy Bank Polski (NBP)**: Implementacja serwisu pobierającego aktualne tabele kursów walut (USD, EUR, GBP, CHF).
+    * **Alpha Vantage**: Integracja z profesjonalnym API giełdowym dla 5 kluczowych spółek technologicznych (AAPL, MSFT, AMZN, GOOGL, TSLA) z wykorzystaniem bezpiecznych kluczy API w zmiennych środowiskowych.
+* **Autorski Algorytm Market Noise**:
+    * Opracowanie funkcji symulującej rzeczywiste wahania rynkowe poprzez dodawanie losowego "szumu" (+/- 0.05%) do statycznych kursów.
+    * Zapewnienie efektu "żywego rynku" na frontendzie bez konieczności nadmiarowego odświeżania danych z API.
+* **Zaawansowany System Smart Caching**:
+    * Implementacja mechanizmu **Lazy Loading**, który pobiera dane z zewnętrznych serwerów tylko raz dziennie, drastycznie redukując zużycie limitów API.
+    * Zastosowanie asynchronicznych opóźnień (`delay`) podczas inicjalizacji danych giełdowych, aby uniknąć blokad typu *Rate Limit* przy darmowych kluczach dostępowych.
+* **Rozbudowa Architektury i Dokumentacji**:
+    * Wprowadzenie nowej warstwy usługowej (`services/`) w celu odseparowania logiki pobierania danych od kontrolerów tras.
+    * Stworzenie dedykowanego modułu `marketRoutes.js` zarządzającego danymi rynkowymi.
+    * Pełna dokumentacja Swagger dla nowych endpointów: `GET /api/market/rates` oraz `GET /api/market/stocks`.

@@ -7,6 +7,7 @@ const swaggerSpec = require('./swagger.js');
 const User = require('./models/User');
 const userRoutes = require('./routes/userRoutes');
 const errorHandler = require('./middleware/errorMiddleware');
+const marketRoutes = require('./routes/marketRoutes');
 
 const app = express();
 
@@ -21,6 +22,8 @@ mongoose.connect(process.env.MONGO_URI)
     .catch(err => console.error("❌ Błąd połączenia z bazą:", err));
 
 app.use('/api/', userRoutes);
+app.use('/api/market', marketRoutes);
+
 app.use(errorHandler);
 
 // Uruchomienie serwera
