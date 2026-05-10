@@ -14,24 +14,37 @@ const addNoise = (price) => {
 const getRates = async () => {
     const today = new Date().toDateString();
 
+    // Jeśli mamy cache z dzisiaj zwracamy z szumem
     if (ratesCache.data && ratesCache.lastFetched === today) {
         return ratesCache.data.map(rate => ({
             ...rate,
-            mid: addNoise(rate.mid)
+            bid: addNoise(rate.bid),
+            ask: addNoise(rate.ask)
         }));
     }
 
-    // Bez try-catch: błąd z axios poleci prosto do asyncHandler w routes
-    const response = await axios.get('https://api.nbp.pl/api/exchangerates/tables/A?format=json');
-    const rates = response.data[0].rates;
-    const filteredRates = rates.filter(r => ['USD', 'EUR', 'GBP', 'CHF'].includes(r.code));
+    // Pobieramy TABELĘ C (bid/ask)
+    const response = await axios.get(
+        'https://api.nbp.pl/api/exchangerates/tables/C?format=json'
+    );
 
+    const rates = response.data[0].rates;
+
+    // Filtrujemy tylko waluty, które obslugujemy
+    const filteredRates = rates.filter(r =>
+        ['USD', 'EUR', 'GBP', 'CHF', 'JPY'].includes(r.code)
+    );
+
+    // Zapisujemy do cache
     ratesCache.data = filteredRates;
     ratesCache.lastFetched = today;
 
+    // Zwracamy z dodanym szumem
     return filteredRates.map(rate => ({
-        ...rate,
-        mid: addNoise(rate.mid)
+        code: rate.code,
+        currency: rate.currency,
+        bid: addNoise(rate.bid),
+        ask: addNoise(rate.ask)
     }));
 };
 

@@ -21,10 +21,25 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 100000
     },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    }
+    portfolio: {
+        currencies: [
+            {
+                code: { type: String },
+                amount: { type: Number, default: 0 },
+                lastBuyPrice: { type: Number, default: 0 },
+                profit: { type: Number, default: 0 }
+            }
+        ],
+        stocks: [
+            {
+                symbol: { type: String },
+                amount: { type: Number, default: 0 },
+                lastBuyPrice: { type: Number, default: 0 },
+                profit: { type: Number, default: 0 }
+            }
+        ]
+    },
+
 });
 
 // MIDDLEWARE PRZED ZAPISEM

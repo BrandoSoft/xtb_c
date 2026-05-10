@@ -40,7 +40,7 @@ const getStocks = async () => {
         }
 
         // Czekamy 15 sekund między akcjami, żeby zmieścić się w limicie 5/min
-        if (symbol !== 'TSLA') await delay(15000);
+        if (symbol !== 'TSLA') await delay(5000);
     }
 
     stockCache.data = results;
